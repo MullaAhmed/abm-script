@@ -3,157 +3,856 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ABM Personalization Demo</title>
+  <title>DummyOps — AI-Powered Landing Page Personalization</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111; }
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #1e293b;
+      background: #fff;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
 
-    .simulator {
-      background: #f9fafb;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 1.5rem;
-    }
-    .simulator-inner { max-width: 40rem; margin: 0 auto; }
-    .simulator h2 {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1rem;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-    .grid label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .grid label span {
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: #6b7280;
-      text-transform: capitalize;
-    }
-    .grid input {
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      padding: 0.375rem 0.75rem;
-      font-size: 0.875rem;
-      outline: none;
-    }
-    .grid input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
-    .btn {
-      margin-top: 1rem;
-      padding: 0.5rem 1.25rem;
-      background: #111;
+    /* ── Nav ───────────────────────────────────────── */
+    .nav {
+      background: #0f172a;
       color: #fff;
-      border: none;
-      border-radius: 0.5rem;
-      font-size: 0.875rem;
-      cursor: pointer;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .btn:hover { background: #333; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo {
+      width: 32px;
+      height: 32px;
+      background: #3b82f6;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.875rem;
+      color: #fff;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta {
+      background: #3b82f6;
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .nav-cta:hover { background: #2563eb; }
 
+    /* ── Hero ──────────────────────────────────────── */
     .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       text-align: center;
-      padding: 6rem 2rem;
-      gap: 1.5rem;
+      padding: 6rem 2rem 5rem;
+      background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
     }
-    .hero h1 { font-size: 3rem; font-weight: 700; max-width: 36rem; }
-    .hero .subtext { font-size: 1.25rem; color: #4b5563; max-width: 28rem; }
-    .hero .cta {
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 0.375rem 0.875rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      border: 1px solid #bfdbfe;
+    }
+    .hero h1 {
+      font-size: clamp(2.25rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.15;
+      max-width: 48rem;
+      letter-spacing: -0.03em;
+      color: #0f172a;
+    }
+    .hero-subtext {
+      font-size: 1.25rem;
+      color: #64748b;
+      max-width: 36rem;
+      margin-top: 1.25rem;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 2.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
       padding: 0.75rem 2rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-secondary {
+      background: #fff;
+      color: #1e293b;
+      padding: 0.75rem 2rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .btn-secondary:hover { border-color: #94a3b8; }
+    .hero-proof {
+      margin-top: 3rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    /* ── Trust Bar ─────────────────────────────────── */
+    .trust-bar {
+      padding: 3rem 2rem;
+      text-align: center;
+      border-top: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+      background: #fff;
+    }
+    .trust-bar p {
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    .trust-logos {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+      max-width: 50rem;
+      margin: 0 auto;
+    }
+    .trust-logo {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Features ──────────────────────────────────── */
+    .features {
+      padding: 5rem 2rem;
+      background: #fff;
+    }
+    .features-header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .features-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+    .features-header p {
+      margin-top: 0.75rem;
+      font-size: 1.125rem;
+      color: #64748b;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 64rem;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 2rem;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover {
+      border-color: #bfdbfe;
+      box-shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
+    }
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      background: #eff6ff;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .feature-card h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+    .feature-card p {
+      font-size: 0.9375rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* ── Testimonial ──────────────────────────────── */
+    .testimonial {
+      padding: 5rem 2rem;
+      background: #f8fafc;
+      text-align: center;
+    }
+    .testimonial-inner {
+      max-width: 40rem;
+      margin: 0 auto;
+    }
+    .testimonial blockquote {
+      font-size: 1.375rem;
+      font-weight: 500;
+      color: #1e293b;
+      line-height: 1.6;
+      font-style: italic;
+    }
+    .testimonial blockquote::before { content: "\201C"; }
+    .testimonial blockquote::after  { content: "\201D"; }
+    .testimonial cite {
+      display: block;
+      margin-top: 1.5rem;
+      font-size: 0.9375rem;
+      color: #64748b;
+      font-style: normal;
+      font-weight: 500;
+    }
+
+    /* ── CTA Banner ───────────────────────────────── */
+    .cta-banner {
+      padding: 5rem 2rem;
+      background: #0f172a;
+      color: #fff;
+      text-align: center;
+    }
+    .cta-banner h2 {
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 700;
+      max-width: 36rem;
+      margin: 0 auto;
+      letter-spacing: -0.02em;
+    }
+    .cta-banner-btn {
+      display: inline-block;
+      margin-top: 2rem;
+      background: #3b82f6;
+      color: #fff;
+      padding: 0.75rem 2.5rem;
+      border-radius: 0.5rem;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .cta-banner-btn:hover { background: #2563eb; }
+
+    /* ── Footer ────────────────────────────────────── */
+    .footer {
+      padding: 2.5rem 2rem;
+      text-align: center;
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+    }
+    .footer p {
+      font-size: 0.875rem;
+      color: #475569;
+    }
+
+    /* ── Floating Trigger ─────────────────────────── */
+    .fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 200;
       background: #2563eb;
       color: #fff;
       border: none;
-      border-radius: 0.5rem;
-      font-size: 1.125rem;
+      border-radius: 9999px;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
       cursor: pointer;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
     }
-    .hero .cta:hover { background: #1d4ed8; }
-    .hero .social-proof { font-size: 0.875rem; color: #9ca3af; margin-top: 2rem; }
+    .fab:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4); }
+    .fab svg { width: 18px; height: 18px; fill: currentColor; }
 
-    [data-personalized="true"] {
-      transition: opacity 0.3s;
-      animation: fadeIn 0.4s ease-in;
+    /* ── Drawer ────────────────────────────────────── */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.3);
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s, visibility 0.25s;
     }
-    @keyframes fadeIn { from { opacity: 0.4; } to { opacity: 1; } }
+    .drawer-backdrop.open { opacity: 1; visibility: visible; }
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      max-width: 90vw;
+      background: #fff;
+      z-index: 301;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .drawer-header h3 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .drawer-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      padding: 0.25rem;
+      border-radius: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .drawer-close:hover { color: #475569; background: #f1f5f9; }
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+    .drawer-body .field {
+      margin-bottom: 1rem;
+    }
+    .drawer-body .field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.375rem;
+    }
+    .drawer-body .field input {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      color: #1e293b;
+    }
+    .drawer-body .field input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+    .drawer-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-personalize {
+      flex: 1;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 0.625rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-personalize:hover { background: #1d4ed8; }
+    .btn-personalize:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-reset {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      padding: 0.625rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: none;
+    }
+    .btn-reset:hover { background: #e2e8f0; }
+    .btn-reset.visible { display: block; }
+
+    /* ── Loading Overlay ──────────────────────────── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .loading-overlay.active { opacity: 1; visibility: visible; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay p {
+      font-size: 0.9375rem;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    /* ── Error Toast ──────────────────────────────── */
+    .error-toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      z-index: 600;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
+    }
+    .error-toast.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Status Badge ─────────────────────────────── */
+    .status-badge {
+      position: fixed;
+      top: 76px;
+      right: 1.5rem;
+      z-index: 150;
+      padding: 0.3125rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: background 0.3s, color 0.3s;
+    }
+    .status-badge.original {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .status-badge.personalized {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    .status-badge.cached {
+      background: #fef9c3;
+      color: #854d0e;
+      border: 1px solid #fde68a;
+    }
+
+    /* ── Personalized Highlight ───────────────────── */
+    [data-personalized="true"] {
+      animation: fadeHighlight 0.6s ease-out;
+    }
+    @keyframes fadeHighlight {
+      0%   { opacity: 0.3; background: rgba(37, 99, 235, 0.08); }
+      50%  { background: rgba(37, 99, 235, 0.06); }
+      100% { opacity: 1; background: transparent; }
+    }
+
+    /* ── Responsive ───────────────────────────────── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero { padding: 4rem 1.5rem 3rem; }
+      .trust-logos { gap: 1.5rem; }
+      .features { padding: 3rem 1.5rem; }
+      .features-grid { gap: 1.25rem; }
+      .testimonial { padding: 3rem 1.5rem; }
+      .cta-banner { padding: 3rem 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.75rem; }
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .trust-logo { font-size: 0.9375rem; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Simulate visitor identity -->
-  <section class="simulator">
-    <div class="simulator-inner">
-      <h2>Simulate Visitor Identity</h2>
-      <form data-abm-trigger class="grid">
-        <label>
-          <span>First Name</span>
-          <input type="text" name="first_name" value="Jane">
-        </label>
-        <label>
-          <span>Last Name</span>
-          <input type="text" name="last_name" value="Smith">
-        </label>
-        <label>
-          <span>Email</span>
-          <input type="email" name="email" value="jane@acme.com">
-        </label>
-        <label>
-          <span>Company</span>
-          <input type="text" name="company_name" value="Acme Corp">
-        </label>
-        <label>
-          <span>Role</span>
-          <input type="text" name="title" value="VP of Marketing">
-        </label>
-        <label>
-          <span>Industry</span>
-          <input type="text" name="company_industry" value="SaaS">
-        </label>
-        <div style="grid-column: span 2;">
-          <button type="submit" class="btn" id="personalize-btn">
-            Personalize Landing Page
-          </button>
-        </div>
-      </form>
+  <!-- ── Nav ──────────────────────────────────────── -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <div class="nav-logo">D</div>
+      <span dummy-ops-element="nav-company">DummyOps</span>
+    </div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#testimonials">Customers</a>
+      <a href="#">Pricing</a>
+      <a href="#">Integrations</a>
+    </div>
+    <button class="nav-cta" dummy-ops-element="nav-cta">Start Free Trial</button>
+  </nav>
+
+  <!-- ── Hero ─────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-badge">&#10024; New: LLM powered copy generation</div>
+    <h1 dummy-ops-element="headline">Every visitor sees the landing page that converts them</h1>
+    <p class="hero-subtext" dummy-ops-element="subtext">DummyOps personalizes your landing pages in real time using AI — tailored headlines, copy, and CTAs for every visitor based on who they are and where they come from.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" dummy-ops-element="cta">Start Free Trial</button>
+      <button class="btn-secondary">Watch Demo</button>
+    </div>
+    <p class="hero-proof" dummy-ops-element="proof">Trusted by 2,000+ marketing teams — 3.2x average lift in conversions</p>
+  </section>
+
+  <!-- ── Trust Bar ────────────────────────────────── -->
+  <section class="trust-bar">
+    <p dummy-ops-element="trust-heading">Powering personalized experiences for</p>
+    <div class="trust-logos">
+      <span class="trust-logo">Stripe</span>
+      <span class="trust-logo">Datadog</span>
+      <span class="trust-logo">Vercel</span>
+      <span class="trust-logo">Linear</span>
+      <span class="trust-logo">Notion</span>
     </div>
   </section>
 
-  <!-- Demo landing page — just add dummy-ops-element to anything you want personalized -->
-  <section class="hero">
-    <h1 dummy-ops-element="headline">Accelerate Your Growth</h1>
-    <p class="subtext" dummy-ops-element="subtext">The all-in-one platform teams love.</p>
-    <button class="cta" dummy-ops-element="cta">Get Started</button>
-    <p class="social-proof" dummy-ops-element="proof">Trusted by 500+ companies worldwide</p>
+  <!-- ── Features ─────────────────────────────────── -->
+  <section class="features" id="features">
+    <div class="features-header">
+      <h2>Everything you need to personalize at scale</h2>
+      <p>One snippet. Real-time AI. Every visitor gets a page built for them.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#127919;</div>
+        <h3 dummy-ops-element="feature-1-title">Visitor Intelligence</h3>
+        <p dummy-ops-element="feature-1-desc">Identify visitors by company, role, and industry in real time. Enrich anonymous traffic with firmographic data so every page view is an opportunity.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9889;</div>
+        <h3 dummy-ops-element="feature-2-title">AI-Powered Copy Rewriting</h3>
+        <p dummy-ops-element="feature-2-desc">Our AI rewrites your headlines, descriptions, and CTAs on the fly — tailored to each visitor's industry, pain points, and buying stage.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128200;</div>
+        <h3 dummy-ops-element="feature-3-title">Conversion Analytics</h3>
+        <p dummy-ops-element="feature-3-desc">See exactly how personalization moves the needle. A/B test original vs. personalized variants with built-in attribution and funnel tracking.</p>
+      </div>
+    </div>
   </section>
 
-  <!-- Thin client script -->
-  <script src="/api/snippet.js"></script>
-  <script>
-    initABM({
-      backendURL: window.location.origin,
-      debug: true
-    });
+  <!-- ── Testimonial ──────────────────────────────── -->
+  <section class="testimonial" id="testimonials">
+    <div class="testimonial-inner">
+      <blockquote dummy-ops-element="testimonial-quote">We dropped DummyOps onto our landing pages and saw a 4x jump in demo requests within two weeks. The personalized copy practically sells itself.</blockquote>
+      <cite dummy-ops-element="testimonial-author">Sarah Chen, VP of Marketing at ScaleGrid</cite>
+    </div>
+  </section>
 
-    var btn = document.getElementById("personalize-btn");
-    document.querySelector("form[data-abm-trigger]").addEventListener("submit", function() {
-      btn.textContent = "Personalizing...";
-      btn.disabled = true;
-    });
-    window.addEventListener("abm:personalized", function() {
-      btn.textContent = "Re-personalize";
-      btn.disabled = false;
-    });
+  <!-- ── CTA Banner ───────────────────────────────── -->
+  <section class="cta-banner">
+    <h2 dummy-ops-element="cta-headline">Stop showing the same page to every visitor</h2>
+    <button class="cta-banner-btn" dummy-ops-element="cta-button">Start Personalizing — Free</button>
+  </section>
+
+  <!-- ── Footer ───────────────────────────────────── -->
+  <footer class="footer">
+    <p dummy-ops-element="footer-tagline">&copy; 2026 DummyOps, Inc. Personalized pages, higher conversions.</p>
+  </footer>
+
+  <!-- ── Status Badge ─────────────────────────────── -->
+  <div class="status-badge original" id="status-badge">Original</div>
+
+  <!-- ── Floating Action Button ───────────────────── -->
+  <button class="fab" id="fab-trigger">
+    <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+    Simulate Visitor
+  </button>
+
+  <!-- ── Drawer Backdrop ──────────────────────────── -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+  <!-- ── Drawer ───────────────────────────────────── -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <h3>Simulate Visitor Identity</h3>
+      <button class="drawer-close" id="drawer-close">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <form id="identity-form" data-abm-trigger>
+        <div class="field">
+          <label for="f-first">First Name</label>
+          <input id="f-first" type="text" name="first_name" value="Jane">
+        </div>
+        <div class="field">
+          <label for="f-last">Last Name</label>
+          <input id="f-last" type="text" name="last_name" value="Smith">
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" type="email" name="email" value="jane@acme.com">
+        </div>
+        <div class="field">
+          <label for="f-company">Company</label>
+          <input id="f-company" type="text" name="company_name" value="Acme Corp">
+        </div>
+        <div class="field">
+          <label for="f-role">Role</label>
+          <input id="f-role" type="text" name="title" value="VP of Marketing">
+        </div>
+        <div class="field">
+          <label for="f-industry">Industry</label>
+          <input id="f-industry" type="text" name="company_industry" value="SaaS">
+        </div>
+      </form>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn-personalize" id="btn-personalize" type="button">Personalize</button>
+      <button class="btn-reset" id="btn-reset" type="button">Reset</button>
+    </div>
+  </div>
+
+  <!-- ── Loading Overlay ──────────────────────────── -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+    <p>Researching &amp; personalizing&hellip;</p>
+  </div>
+
+  <!-- ── Error Toast ──────────────────────────────── -->
+  <div class="error-toast" id="error-toast">Something went wrong. Please try again.</div>
+
+  <!-- ── Fetch interceptor (before abm.js loads) ──── -->
+  <script>
+    (function () {
+      var _origFetch = window.fetch;
+      window.fetch = function () {
+        var args = Array.prototype.slice.call(arguments);
+        var url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
+        var promise = _origFetch.apply(this, args);
+        if (url.indexOf("/api/identify") !== -1) {
+          promise.then(function (res) {
+            if (!res.ok) {
+              window.dispatchEvent(new CustomEvent("abm:error", { detail: { status: res.status } }));
+            }
+          }).catch(function (err) {
+            window.dispatchEvent(new CustomEvent("abm:error", { detail: { message: err.message } }));
+          });
+        }
+        return promise;
+      };
+    })();
+  </script>
+
+  <!-- ── ABM Thin Client ──────────────────────────── -->
+  <script src="/api/snippet.js"></script>
+
+  <!-- ── Demo UX Logic ────────────────────────────── -->
+  <script>
+    (function () {
+      // Init ABM client
+      initABM({ backendURL: window.location.origin, debug: true });
+
+      // ── DOM refs ──
+      var fab            = document.getElementById("fab-trigger");
+      var drawerBackdrop = document.getElementById("drawer-backdrop");
+      var drawer         = document.getElementById("drawer");
+      var drawerClose    = document.getElementById("drawer-close");
+      var form           = document.getElementById("identity-form");
+      var btnPersonalize = document.getElementById("btn-personalize");
+      var btnReset       = document.getElementById("btn-reset");
+      var overlay        = document.getElementById("loading-overlay");
+      var toast          = document.getElementById("error-toast");
+      var badge          = document.getElementById("status-badge");
+
+      // ── Store originals ──
+      var originals = {};
+      var els = document.querySelectorAll("[dummy-ops-element]");
+      for (var i = 0; i < els.length; i++) {
+        originals[els[i].getAttribute("dummy-ops-element")] = els[i].textContent;
+      }
+
+      // ── Detect cached state on load ──
+      var cached = null;
+      try { cached = localStorage.getItem("abm_components"); } catch (e) {}
+      if (cached) {
+        setBadge("cached");
+        btnReset.classList.add("visible");
+      }
+
+      // ── Drawer open / close ──
+      function openDrawer()  { drawer.classList.add("open"); drawerBackdrop.classList.add("open"); }
+      function closeDrawer() { drawer.classList.remove("open"); drawerBackdrop.classList.remove("open"); }
+
+      fab.addEventListener("click", openDrawer);
+      drawerClose.addEventListener("click", closeDrawer);
+      drawerBackdrop.addEventListener("click", closeDrawer);
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
+
+      // ── Personalize ──
+      var errorTimeout = null;
+
+      btnPersonalize.addEventListener("click", function () {
+        // Submit the form (triggers abm.js data-abm-trigger handler)
+        var evt = new Event("submit", { bubbles: true, cancelable: true });
+        form.dispatchEvent(evt);
+
+        closeDrawer();
+        showOverlay();
+        btnPersonalize.disabled = true;
+
+        // Safety timeout — hide overlay after 30s even if no event fires
+        errorTimeout = setTimeout(function () {
+          hideOverlay();
+          showError("Request timed out. Please try again.");
+          btnPersonalize.disabled = false;
+        }, 30000);
+      });
+
+      // ── Success ──
+      window.addEventListener("abm:personalized", function () {
+        clearTimeout(errorTimeout);
+        hideOverlay();
+        setBadge("personalized");
+        btnPersonalize.disabled = false;
+        btnPersonalize.textContent = "Re-personalize";
+        btnReset.classList.add("visible");
+      });
+
+      // ── Error ──
+      window.addEventListener("abm:error", function (e) {
+        clearTimeout(errorTimeout);
+        hideOverlay();
+        var detail = e.detail || {};
+        var msg = detail.message || ("Request failed" + (detail.status ? " (" + detail.status + ")" : ""));
+        showError(msg);
+        btnPersonalize.disabled = false;
+      });
+
+      // ── Reset ──
+      btnReset.addEventListener("click", function () {
+        // Restore original text
+        var els = document.querySelectorAll("[dummy-ops-element]");
+        for (var i = 0; i < els.length; i++) {
+          var key = els[i].getAttribute("dummy-ops-element");
+          if (originals[key] !== undefined) {
+            els[i].textContent = originals[key];
+          }
+          els[i].removeAttribute("data-personalized");
+        }
+
+        // Clear cache
+        try {
+          localStorage.removeItem("abm_components");
+          localStorage.removeItem("abm_cached_at");
+        } catch (e) {}
+
+        setBadge("original");
+        btnReset.classList.remove("visible");
+        btnPersonalize.textContent = "Personalize";
+      });
+
+      // ── Helpers ──
+      function showOverlay() { overlay.classList.add("active"); }
+      function hideOverlay() { overlay.classList.remove("active"); }
+
+      function showError(msg) {
+        toast.textContent = msg || "Something went wrong. Please try again.";
+        toast.classList.add("visible");
+        setTimeout(function () { toast.classList.remove("visible"); }, 4000);
+      }
+
+      function setBadge(state) {
+        badge.className = "status-badge " + state;
+        var labels = { original: "Original", personalized: "Personalized", cached: "Cached" };
+        badge.textContent = labels[state] || state;
+      }
+    })();
   </script>
 
 </body>

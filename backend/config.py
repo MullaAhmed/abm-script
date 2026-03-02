@@ -5,7 +5,7 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Resolve .env from the abm-script root (two levels up from this file)
-_env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+_env_file = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):

@@ -12,8 +12,12 @@
       this._backendURL = config.backendURL.replace(/\/+$/, "");
       this._debug = config.debug || false;
       this._siteId = config.siteId || null;
+      this._ip = null;
 
       this._log("Initializing...");
+
+      // Fetch visitor's public IP for identity resolution
+      this._fetchIP();
 
       // Apply cached personalization immediately (avoids flash)
       var cached = this._getCachedComponents();
@@ -106,6 +110,17 @@
       return elements;
     },
 
+    _fetchIP: function () {
+      var self = this;
+      fetch("https://api.ipify.org?format=json")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          self._ip = data && data.ip || null;
+          self._log("Resolved public IP:", self._ip);
+        })
+        .catch(function () {});
+    },
+
     _sendToBackend: function (payload) {
       var self = this;
       var url = this._backendURL + "/api/identify";
@@ -114,6 +129,10 @@
       if (elements.length === 0) {
         this._log("No [dummy-ops-element] found on page, skipping.");
         return;
+      }
+
+      if (this._ip && !payload.ip) {
+        payload.ip = this._ip;
       }
 
       var body = JSON.stringify({

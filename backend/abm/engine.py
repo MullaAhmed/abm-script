@@ -1,15 +1,41 @@
 import time
 
 from .cache import create_cache
-from ..config import Settings, get_settings
+from config import Settings, get_settings
 from .identity import create_identity_provider
 from .models import (
     IdentifyResponse,
     PageElement,
     PersonalizationCache,
+    VisitorInfo,
 )
-from .personalizer import personalize_elements
-from .researcher import research_visitor
+from .personalizer import research_and_personalize
+
+
+def _visitor_from_payload(payload: dict) -> VisitorInfo | None:
+    """Try to build a VisitorInfo directly from structured payload fields."""
+    email = payload.get("email")
+    company = payload.get("company_name") or payload.get("company")
+    if not email and not company:
+        return None
+
+    first = payload.get("first_name", "")
+    last = payload.get("last_name", "")
+    name = f"{first} {last}".strip() if first or last else payload.get("name")
+
+    location_parts = [payload.get("city"), payload.get("state"), payload.get("country")]
+    location = ", ".join(p for p in location_parts if p) or payload.get("location")
+
+    return VisitorInfo(
+        name=name,
+        email=email,
+        company=company,
+        role=payload.get("title") or payload.get("role"),
+        industry=payload.get("company_industry") or payload.get("industry"),
+        company_size=payload.get("company_size"),
+        linkedin_url=payload.get("linkedin_url"),
+        location=location,
+    )
 
 
 class PersonalizationEngine:
@@ -35,6 +61,10 @@ class PersonalizationEngine:
         """Full pipeline: identify -> cache check -> research -> personalize -> cache -> respond."""
         visitor = await self.identity.identify(payload)
 
+        # Fall back to extracting visitor info directly from payload
+        if not visitor:
+            visitor = _visitor_from_payload(payload)
+
         if not visitor:
             # Return original text as-is when visitor is unknown
             return IdentifyResponse(
@@ -53,11 +83,8 @@ class PersonalizationEngine:
                 cached=True,
             )
 
-        # AI pipeline: research -> personalize
-        research = await research_visitor(visitor, model=self.model)
-        result = await personalize_elements(
-            visitor, research, elements, model=self.model
-        )
+        # Single AI call: web search + personalize
+        result = await research_and_personalize(visitor, elements, model=self.model)
 
         # Build component map, fall back to original text for any missing elements
         components = {e.id: e.content for e in result}

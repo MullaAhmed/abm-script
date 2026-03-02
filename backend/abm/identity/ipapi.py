@@ -16,17 +16,21 @@ class IPAPIProvider:
     name = "ip-api"
 
     def __init__(self) -> None:
-        self._client = httpx.AsyncClient()
+        self._client = httpx.AsyncClient(timeout=5.0)
 
     async def identify(self, payload: dict) -> VisitorInfo | None:
         ip = payload.get("ip")
         if not ip:
             return None
 
-        resp = await self._client.get(
-            f"http://ip-api.com/json/{ip}",
-            params={"fields": "status,org,isp,country,regionName,city,timezone"},
-        )
+        try:
+            resp = await self._client.get(
+                f"http://ip-api.com/json/{ip}",
+                params={"fields": "status,org,isp,country,regionName,city,timezone"},
+            )
+        except httpx.HTTPError:
+            return None
+
         if resp.status_code != 200:
             return None
 

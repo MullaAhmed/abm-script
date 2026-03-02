@@ -1,0 +1,34 @@
+{
+  "visitor_id": "ahmed@car",
+  "visitor": {
+    "name": "Ahmed Mulla",
+    "email": "ahmed@car",
+    "company": "Careerflow.ai",
+    "role": "Data Scienstist",
+    "industry": "Education",
+    "company_size": null,
+    "linkedin_url": null,
+    "location": null
+  },
+  "components": {
+    "nav-company": "Careerflow.ai",
+    "nav-cta": "Book a Demo",
+    "headline": "Scale Careerflow.ai's AI-Powered Education Platform",
+    "subtext": "ABM-powered growth for Careerflow.ai's education-focused career platform.",
+    "cta": "Request a Demo",
+    "proof": "Trusted by education institutions and edtech teams worldwide.",
+    "trust-heading": "Trusted by education marketing and student success teams.",
+    "feature-1-title": "Real-Time Education Account Insights",
+    "feature-1-desc": "Unified dashboards surface institutional signals, student engagement, and enrollment changes in real time.",
+    "feature-2-title": "Automated Education Campaign Orchestration",
+    "feature-2-desc": "AI-powered playbooks detect underperforming campaigns, triage issues, and optimize spend in real time. Cut time-to-adjust by up to 80%.",
+    "feature-3-title": "ABM Workflow Automation for Education",
+    "feature-3-desc": "Design and deploy ABM programs for colleges and universities with a visual editor. Connect 200+ marketing tools without boilerplate.",
+    "testimonial-quote": "\"This platform transformed our education ABM program, accelerating enrollment and boosting student engagement.\"",
+    "testimonial-author": "Sophie Kim, VP of Marketing at Leading Education Partners",
+    "cta-headline": "Ready to transform Careerflow.ai's education ABM program?",
+    "cta-button": "Get a Demo",
+    "footer-tagline": "© 2026 Careerflow.ai. Built for education-focused teams."
+  },
+  "created_at": 1772480071.786275
+}

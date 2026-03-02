@@ -1,6 +1,6 @@
 # ABM Script
 
-AI-powered landing page personalization. Identifies visitors (via RB2B or Clearbit), researches them with Claude, and dynamically rewrites page content to match their company, role, and industry.
+AI-powered landing page personalization. Identifies visitors (via RB2B, Clearbit, or ip-api.com), researches them with LiteLLM, and dynamically rewrites page content to match their company, role, and industry.
 
 No component configuration needed — just add `dummy-ops-element` to any HTML element and the AI figures out what to personalize based on the tag and current text.
 
@@ -10,16 +10,17 @@ No component configuration needed — just add `dummy-ops-element` to any HTML e
 abm-script/
 ├── .env                  # All configuration lives here
 ├── backend/              # Python backend (FastAPI) — all heavy logic
+│   ├── main.py           # API routes + app entry point
+│   ├── config.py         # Settings (reads from .env)
 │   └── abm/
-│       ├── server.py     # API routes
 │       ├── engine.py     # Orchestration pipeline
-│       ├── config.py     # Settings (reads from .env)
 │       ├── cache.py      # Memory or file-based TTL cache
 │       ├── researcher.py # AI visitor research
 │       ├── personalizer.py # AI content generation
 │       └── identity/     # Identity providers
 │           ├── rb2b.py
-│           └── clearbit.py
+│           ├── clearbit.py
+│           └── ipapi.py
 ├── client/
 │   └── abm.js           # Thin vanilla JS snippet (~160 lines)
 ├── demo/
@@ -32,10 +33,10 @@ abm-script/
 ## Quick Start
 
 ```bash
-cp .env.example .env      # Add your API_KEY
+cp .env.example .env      # Add your OPENAI_API_KEY
 cd backend
 uv sync
-uv run uvicorn abm.main:app --reload --port 8001
+uv run uvicorn main:app --port 8001
 ```
 
 Open [http://localhost:8001/demo](http://localhost:8001/demo) to test.
@@ -48,16 +49,18 @@ The entire application is configured via a single `.env` file in the project roo
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | — | Claude API key |
-| `ABM_AI_MODEL` | No | `claude-sonnet-4-6` | Model for research and personalization |
+| `OPENAI_API_KEY` | Yes | — | OpenAI API key (used via LiteLLM) |
+| `ABM_AI_MODEL` | No | `openai/gpt-5-nano` | Model for research and personalization |
 
 ### Identity Provider
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `IDENTITY_PROVIDER` | No | `rb2b` | Which provider: `rb2b` or `clearbit-reveal` |
+| `IDENTITY_PROVIDER` | No | `rb2b` | Which provider: `rb2b`, `clearbit-reveal`, or `ip-api` |
 | `RB2B_API_KEY` | No | — | API key for RB2B |
 | `CLEARBIT_API_KEY` | No | — | API key for Clearbit Reveal |
+
+> **Demo mode:** Set `IDENTITY_PROVIDER=ip-api` to use the free ip-api.com service (no API key needed). It resolves company/org and location from visitor IP.
 
 ### Storage / Cache
 
@@ -219,9 +222,9 @@ abm.js collects all [dummy-ops-element] nodes from the DOM
 Sends visitor identity + elements to POST /api/identify
     ↓
 Backend:
-  1. Parse identity (RB2B or Clearbit provider)
+  1. Parse identity (RB2B, Clearbit, or ip-api provider)
   2. Check cache (memory or file, per STORAGE_TYPE)
-  3. Research visitor via Claude (role, company, pain points)
+  3. Research visitor via LiteLLM (role, company, pain points)
   4. AI rewrites each element's text for this specific visitor
   5. Cache result, return to client
     ↓

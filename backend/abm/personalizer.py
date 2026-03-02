@@ -2,67 +2,90 @@ import json
 
 import litellm
 
-from .models import (
-    PageElement,
-    PersonalizedElement,
-    ResearchResponse,
-    VisitorInfo,
-)
+from .models import PageElement, PersonalizedElement, VisitorInfo
 
 
-async def personalize_elements(
+def _build_visitor_context(visitor: VisitorInfo) -> str:
+    parts: list[str] = []
+    if visitor.name:
+        parts.append(f"Name: {visitor.name}")
+    if visitor.email:
+        parts.append(f"Email: {visitor.email}")
+    if visitor.company:
+        parts.append(f"Company: {visitor.company}")
+    if visitor.role:
+        parts.append(f"Role: {visitor.role}")
+    if visitor.industry:
+        parts.append(f"Industry: {visitor.industry}")
+    if visitor.company_size:
+        parts.append(f"Company Size: {visitor.company_size}")
+    if visitor.linkedin_url:
+        parts.append(f"LinkedIn: {visitor.linkedin_url}")
+    if visitor.location:
+        parts.append(f"Location: {visitor.location}")
+    return "\n".join(parts) if parts else "No visitor information available."
+
+
+async def research_and_personalize(
     visitor: VisitorInfo,
-    research: ResearchResponse,
     elements: list[PageElement],
     model: str = "openai/gpt-5-nano",
 ) -> list[PersonalizedElement]:
-    """Generate personalized content for each page element based on visitor research."""
+    """Research a visitor via web search and personalize page elements in a single LLM call."""
+
+    visitor_context = _build_visitor_context(visitor)
 
     elements_spec = "\n".join(
         f'- id="{e.id}" tag=<{e.tag}> current text: "{e.current_text}"'
         for e in elements
     )
 
-    response = await litellm.acompletion(
+    response = await litellm.aresponses(
         model=model,
-        max_tokens=2048,
         service_tier="priority",
-        messages=[
-            {
-                "role": "user",
-                "content": f"""You are an ABM copywriter personalizing a landing page for a specific visitor.
+        tools=[{"type": "web_search_preview"}],
+        input=f"""You are an expert conversion copywriter for DummyOps, an AI-powered landing page personalization platform. DummyOps lets marketing teams automatically tailor headlines, copy, and CTAs to each website visitor in real time — boosting conversions without manual A/B testing.
 
-VISITOR RESEARCH:
-{research.summary}
-
-Talking points: {", ".join(research.talking_points)}
-Pain points: {", ".join(research.pain_points)}
-Recommended tone: {research.recommended_tone}
+A visitor just landed on the DummyOps marketing site. Your job:
+1. Research this visitor's company and role to understand their world.
+2. Rewrite the landing page copy to sell DummyOps to THIS specific person — connect DummyOps's value to their actual problems.
 
 VISITOR:
-Name: {visitor.name or "Unknown"}
-Company: {visitor.company or "Unknown"}
-Role: {visitor.role or "Unknown"}
-Industry: {visitor.industry or "Unknown"}
+{visitor_context}
+
+RESEARCH INSTRUCTIONS:
+Search the web for the visitor's company to learn what they do, their industry, scale, and any recent news. Understand what someone in their role cares about (e.g. a VP of Marketing cares about pipeline and conversion rates, a CTO cares about engineering velocity and integration ease).
+
+REWRITING RULES:
+- Sell DummyOps by connecting its benefits to the visitor's specific situation
+- Reference their company by name where natural (headlines, social proof, testimonials)
+- Speak to their role's priorities — what would make THIS person click "Start Free Trial"?
+- Keep each element's purpose (headline stays a headline, CTA stays a CTA, etc.)
+- Match the approximate length of the original — don't bloat copy
+- Sound confident and natural, not salesy or generic. Write like a top SaaS marketer.
+- For testimonials: rewrite the quote to reflect a use case relevant to the visitor's industry, and make the attribution someone in a similar role/industry (not the visitor themselves)
+- For trust/proof lines: reference companies or metrics relevant to their industry
 
 PAGE ELEMENTS TO PERSONALIZE:
 {elements_spec}
 
-For each element, rewrite the text so it speaks directly to this visitor.
-Infer the purpose of each element from its tag and current text (e.g. an <h1> is a headline, a <button> is a CTA, a <p> is body copy).
-Keep the same general intent but tailor it to the visitor's company, role, and pain points.
-Keep text concise — match the approximate length of the original.
-
-Respond in this exact JSON format (no markdown, no code fences):
+Respond with ONLY this JSON (no markdown, no code fences):
 {{
   "elements": [
     {{"id": "element-id", "content": "personalized text"}}
   ]
 }}""",
-            }
-        ],
     )
 
-    raw = response.choices[0].message.content
+    # Extract text from the Responses API output
+    raw = ""
+    for item in response.output:
+        if getattr(item, "type", None) == "message":
+            for block in item.content:
+                if getattr(block, "type", None) == "output_text":
+                    raw = block.text
+                    break
+            break
+
     data = json.loads(raw)
     return [PersonalizedElement(**e) for e in data["elements"]]
