@@ -1,20 +1,19 @@
 from pathlib import Path
 
-import anthropic
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
-from .engine import get_engine
-from .models import (
+from .abm.engine import get_engine
+from .abm.models import (
     IdentifyRequest,
     IdentifyResponse,
     ResearchRequest,
     ResearchResponse,
 )
-from .researcher import research_visitor
+from .abm.researcher import research_visitor
 
 settings = get_settings()
 
@@ -31,17 +30,6 @@ app.add_middleware(
 _root = Path(__file__).resolve().parent.parent.parent
 _client_dir = _root / "client"
 _demo_dir = _root / "demo"
-
-_client: anthropic.AsyncAnthropic | None = None
-
-
-def _get_client() -> anthropic.AsyncAnthropic:
-    global _client
-    if _client is None:
-        if not settings.anthropic_api_key:
-            raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not set")
-        _client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
-    return _client
 
 
 # --- Primary endpoint: thin client calls this ---
@@ -73,8 +61,7 @@ async def serve_snippet() -> FileResponse:
 @app.post("/research", response_model=ResearchResponse)
 async def research(req: ResearchRequest) -> ResearchResponse:
     """Research a visitor and return intelligence for personalization."""
-    client = _get_client()
-    return await research_visitor(client, req.visitor, model=settings.abm_ai_model)
+    return await research_visitor(req.visitor, model=settings.abm_ai_model)
 
 
 @app.get("/health")

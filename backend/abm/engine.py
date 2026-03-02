@@ -1,9 +1,7 @@
 import time
 
-import anthropic
-
 from .cache import create_cache
-from .config import Settings, get_settings
+from ..config import Settings, get_settings
 from .identity import create_identity_provider
 from .models import (
     IdentifyResponse,
@@ -18,7 +16,6 @@ class PersonalizationEngine:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.model = settings.abm_ai_model
-        self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
         self.identity = create_identity_provider(
             settings.identity_provider,
             settings.get_identity_api_key(),
@@ -57,9 +54,9 @@ class PersonalizationEngine:
             )
 
         # AI pipeline: research -> personalize
-        research = await research_visitor(self.client, visitor, model=self.model)
+        research = await research_visitor(visitor, model=self.model)
         result = await personalize_elements(
-            self.client, visitor, research, elements, model=self.model
+            visitor, research, elements, model=self.model
         )
 
         # Build component map, fall back to original text for any missing elements

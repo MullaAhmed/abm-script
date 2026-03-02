@@ -16,11 +16,11 @@ class Settings(BaseSettings):
     )
 
     # --- AI ---
-    anthropic_api_key: str = ""
-    abm_ai_model: str = "claude-sonnet-4-6"
+    openai_api_key: str = ""
+    abm_ai_model: str = "openai/gpt-5-nano"
 
     # --- Identity ---
-    identity_provider: str = Field(default="rb2b", description="rb2b | clearbit-reveal")
+    identity_provider: str = Field(default="rb2b", description="rb2b | clearbit-reveal | ip-api")
     rb2b_api_key: str = ""
     clearbit_api_key: str = ""
 

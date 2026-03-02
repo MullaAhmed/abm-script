@@ -1,22 +1,22 @@
 import json
 
-import anthropic
+import litellm
 
 from .models import ResearchResponse, VisitorInfo
 
 
 async def research_visitor(
-    client: anthropic.AsyncAnthropic,
     visitor: VisitorInfo,
-    model: str = "claude-sonnet-4-6",
+    model: str = "openai/gpt-5-nano",
 ) -> ResearchResponse:
     """Research a visitor and produce actionable intelligence for personalization."""
 
     visitor_context = _build_visitor_context(visitor)
 
-    message = await client.messages.create(
+    response = await litellm.acompletion(
         model=model,
         max_tokens=1024,
+        service_tier="priority",
         messages=[
             {
                 "role": "user",
@@ -36,7 +36,7 @@ Respond in this exact JSON format (no markdown, no code fences):
         ],
     )
 
-    raw = message.content[0].text
+    raw = response.choices[0].message.content
     data = json.loads(raw)
     return ResearchResponse(**data)
 

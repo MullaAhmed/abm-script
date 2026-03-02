@@ -32,11 +32,10 @@ abm-script/
 ## Quick Start
 
 ```bash
-cd abm-script
-cp .env.example .env      # Add your ANTHROPIC_API_KEY
+cp .env.example .env      # Add your API_KEY
 cd backend
 uv sync
-uv run uvicorn abm.server:app --reload --port 8001
+uv run uvicorn abm.main:app --reload --port 8001
 ```
 
 Open [http://localhost:8001/demo](http://localhost:8001/demo) to test.

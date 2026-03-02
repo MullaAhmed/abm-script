@@ -1,6 +1,6 @@
 import json
 
-import anthropic
+import litellm
 
 from .models import (
     PageElement,
@@ -11,11 +11,10 @@ from .models import (
 
 
 async def personalize_elements(
-    client: anthropic.AsyncAnthropic,
     visitor: VisitorInfo,
     research: ResearchResponse,
     elements: list[PageElement],
-    model: str = "claude-sonnet-4-6",
+    model: str = "openai/gpt-5-nano",
 ) -> list[PersonalizedElement]:
     """Generate personalized content for each page element based on visitor research."""
 
@@ -24,9 +23,10 @@ async def personalize_elements(
         for e in elements
     )
 
-    message = await client.messages.create(
+    response = await litellm.acompletion(
         model=model,
         max_tokens=2048,
+        service_tier="priority",
         messages=[
             {
                 "role": "user",
@@ -63,6 +63,6 @@ Respond in this exact JSON format (no markdown, no code fences):
         ],
     )
 
-    raw = message.content[0].text
+    raw = response.choices[0].message.content
     data = json.loads(raw)
     return [PersonalizedElement(**e) for e in data["elements"]]
