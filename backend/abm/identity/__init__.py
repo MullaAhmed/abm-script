@@ -1,6 +1,7 @@
 from .base import IdentityProvider
 from .clearbit import ClearbitProvider
 from .ipapi import IPAPIProvider
+from .pdl import PDLProvider
 from .rb2b import RB2BProvider
 
 
@@ -14,5 +15,7 @@ def create_identity_provider(
             return ClearbitProvider(api_key)
         case "ip-api":
             return IPAPIProvider()
+        case "pdl":
+            return PDLProvider(api_key)
         case _:
             raise ValueError(f"Unknown identity provider: {provider}")

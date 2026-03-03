@@ -20,9 +20,10 @@ class Settings(BaseSettings):
     abm_ai_model: str = "openai/gpt-5-nano"
 
     # --- Identity ---
-    identity_provider: str = Field(default="rb2b", description="rb2b | clearbit-reveal | ip-api")
+    identity_provider: str = Field(default="pdl", description="pdl | rb2b | clearbit-reveal | ip-api")
     rb2b_api_key: str = ""
     clearbit_api_key: str = ""
+    pdl_api_key: str = ""
 
     # --- Storage / Cache ---
     storage_type: str = Field(default="memory", description="memory | file")
@@ -51,6 +52,8 @@ class Settings(BaseSettings):
                 return self.rb2b_api_key
             case "clearbit-reveal":
                 return self.clearbit_api_key
+            case "pdl":
+                return self.pdl_api_key
             case _:
                 return ""
 
