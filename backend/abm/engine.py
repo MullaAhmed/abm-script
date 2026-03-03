@@ -42,6 +42,7 @@ class PersonalizationEngine:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.model = settings.abm_ai_model
+        self.brave_api_key = settings.brave_api_key
         self.identity = create_identity_provider(
             settings.identity_provider,
             settings.get_identity_api_key(),
@@ -83,8 +84,10 @@ class PersonalizationEngine:
                 cached=True,
             )
 
-        # Single AI call: web search + personalize
-        result = await research_and_personalize(visitor, elements, model=self.model)
+        # Brave search + AI personalize
+        result = await research_and_personalize(
+            visitor, elements, model=self.model, brave_api_key=self.brave_api_key,
+        )
 
         # Build component map, fall back to original text for any missing elements
         components = {e.id: e.content for e in result}

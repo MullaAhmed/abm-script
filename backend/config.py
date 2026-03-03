@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # --- AI ---
     openai_api_key: str = ""
     abm_ai_model: str = "openai/gpt-5-nano"
+    brave_api_key: str = ""
 
     # --- Identity ---
     identity_provider: str = Field(default="pdl", description="pdl | rb2b | clearbit-reveal | ip-api")

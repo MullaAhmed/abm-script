@@ -1,91 +1,99 @@
 import json
 
+import httpx
 import litellm
 
 from .models import PageElement, PersonalizedElement, VisitorInfo
 
+_brave_client = httpx.AsyncClient()
 
-def _build_visitor_context(visitor: VisitorInfo) -> str:
+
+async def _brave_search(query: str, api_key: str, count: int = 3) -> str:
+    """Hit Brave Search API and return a compact summary of top results."""
+    resp = await _brave_client.get(
+        "https://api.search.brave.com/res/v1/web/search",
+        params={"q": query, "count": count},
+        headers={"X-Subscription-Token": api_key, "Accept": "application/json"},
+        timeout=5.0,
+    )
+    if resp.status_code != 200:
+        return ""
+
+    results = resp.json().get("web", {}).get("results", [])
+    snippets: list[str] = []
+    for r in results:
+        title = r.get("title", "")
+        desc = r.get("description", "")
+        snippets.append(f"- {title}: {desc}")
+    return "\n".join(snippets)
+
+
+def _build_company_context(visitor: VisitorInfo) -> str:
     parts: list[str] = []
-    if visitor.name:
-        parts.append(f"Name: {visitor.name}")
-    if visitor.email:
-        parts.append(f"Email: {visitor.email}")
     if visitor.company:
         parts.append(f"Company: {visitor.company}")
-    if visitor.role:
-        parts.append(f"Role: {visitor.role}")
     if visitor.industry:
         parts.append(f"Industry: {visitor.industry}")
     if visitor.company_size:
         parts.append(f"Company Size: {visitor.company_size}")
-    if visitor.linkedin_url:
-        parts.append(f"LinkedIn: {visitor.linkedin_url}")
+    if visitor.role:
+        parts.append(f"Visitor Role: {visitor.role}")
     if visitor.location:
         parts.append(f"Location: {visitor.location}")
-    return "\n".join(parts) if parts else "No visitor information available."
+    return "\n".join(parts) if parts else "Unknown company"
 
 
 async def research_and_personalize(
     visitor: VisitorInfo,
     elements: list[PageElement],
     model: str = "openai/gpt-5-nano",
+    brave_api_key: str = "",
 ) -> list[PersonalizedElement]:
-    """Research a visitor via web search and personalize page elements in a single LLM call."""
+    """Search for the visitor's company via Brave, then personalize page elements."""
 
-    visitor_context = _build_visitor_context(visitor)
+    company_context = _build_company_context(visitor)
+
+    # Brave search for company intel
+    research = ""
+    if brave_api_key and visitor.company:
+        query = f"{visitor.company} company"
+        if visitor.industry:
+            query += f" {visitor.industry}"
+        research = await _brave_search(query, brave_api_key)
+
+    research_block = ""
+    if research:
+        research_block = f"\nCOMPANY RESEARCH:\n{research}\n"
 
     elements_spec = "\n".join(
-        f'- id="{e.id}" tag=<{e.tag}> current text: "{e.current_text}"'
+        f'- id="{e.id}" tag=<{e.tag}> current: "{e.current_text}"'
         for e in elements
     )
 
-    response = await litellm.aresponses(
+    response = await litellm.acompletion(
         model=model,
-        service_tier="priority",
-        tools=[{"type": "web_search_preview"}],
-        input=f"""You are an expert conversion copywriter for DummyOps, an AI-powered landing page personalization platform. DummyOps lets marketing teams automatically tailor headlines, copy, and CTAs to each website visitor in real time — boosting conversions without manual A/B testing.
+        messages=[{
+            "role": "user",
+            "content": f"""Rewrite these landing page elements for a visitor from this company. Sell DummyOps (AI landing page personalization) to their specific industry and company.
 
-A visitor just landed on the DummyOps marketing site. Your job:
-1. Research this visitor's company and role to understand their world.
-2. Rewrite the landing page copy to sell DummyOps to THIS specific person — connect DummyOps's value to their actual problems.
+COMPANY:
+{company_context}
+{research_block}
+RULES:
+- Use the company name naturally in headlines and copy
+- Focus on their industry's pain points and how DummyOps solves them
+- Keep each element's purpose and approximate length
+- Sound confident, not salesy. Write like a top SaaS marketer.
+- For trust/proof: reference relevant industry metrics or companies
 
-VISITOR:
-{visitor_context}
-
-RESEARCH INSTRUCTIONS:
-Search the web for the visitor's company to learn what they do, their industry, scale, and any recent news. Understand what someone in their role cares about (e.g. a VP of Marketing cares about pipeline and conversion rates, a CTO cares about engineering velocity and integration ease).
-
-REWRITING RULES:
-- Sell DummyOps by connecting its benefits to the visitor's specific situation
-- Reference their company by name where natural (headlines, social proof, testimonials)
-- Speak to their role's priorities — what would make THIS person click "Start Free Trial"?
-- Keep each element's purpose (headline stays a headline, CTA stays a CTA, etc.)
-- Match the approximate length of the original — don't bloat copy
-- Sound confident and natural, not salesy or generic. Write like a top SaaS marketer.
-- For testimonials: rewrite the quote to reflect a use case relevant to the visitor's industry, and make the attribution someone in a similar role/industry (not the visitor themselves)
-- For trust/proof lines: reference companies or metrics relevant to their industry
-
-PAGE ELEMENTS TO PERSONALIZE:
+ELEMENTS:
 {elements_spec}
 
-Respond with ONLY this JSON (no markdown, no code fences):
-{{
-  "elements": [
-    {{"id": "element-id", "content": "personalized text"}}
-  ]
-}}""",
+Respond with ONLY JSON, no markdown fences:
+{{"elements": [{{"id": "...", "content": "..."}}]}}""",
+        }],
     )
 
-    # Extract text from the Responses API output
-    raw = ""
-    for item in response.output:
-        if getattr(item, "type", None) == "message":
-            for block in item.content:
-                if getattr(block, "type", None) == "output_text":
-                    raw = block.text
-                    break
-            break
-
+    raw = response.choices[0].message.content
     data = json.loads(raw)
     return [PersonalizedElement(**e) for e in data["elements"]]

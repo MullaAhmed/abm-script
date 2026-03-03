@@ -1,0 +1,34 @@
+{
+  "visitor_id": "puneet@careerflow.ai",
+  "visitor": {
+    "name": "Puneet Kohli",
+    "email": "puneet@careerflow.ai",
+    "company": "Careerflow",
+    "role": "CEO",
+    "industry": "SaaS",
+    "company_size": null,
+    "linkedin_url": null,
+    "location": null
+  },
+  "components": {
+    "nav-company": "Careerflow",
+    "nav-cta": "Request a Demo",
+    "headline": "Every Careerflow visitor sees a landing page that converts.",
+    "subtext": "DummyOps personalizes Careerflow's landing pages in real time using AI — tailored headlines, copy, and CTAs for every visitor based on who they are and where they come from.",
+    "cta": "Start Personalizing — Free",
+    "proof": "Trusted by 2,100+ SaaS teams — 3.2x average lift in conversions.",
+    "trust-heading": "Powering personalized experiences for SaaS growth teams.",
+    "feature-1-title": "Visitor Intelligence",
+    "feature-1-desc": "Identify visitors by company, role, and buying stage in real time. Enrich anonymous traffic with firmographic and intent data so every page view is a conversion opportunity.",
+    "feature-2-title": "AI-Powered Copy Personalization",
+    "feature-2-desc": "Our AI rewrites your headlines, descriptions, and CTAs in real time — tailored to each visitor's SaaS role, challenges, and buying stage.",
+    "feature-3-title": "Conversion Analytics",
+    "feature-3-desc": "See exactly how personalization moves the needle for SaaS metrics. Built-in attribution and funnel tracking let you quantify lift across pages.",
+    "testimonial-quote": "DummyOps turned our landing pages into conversation drivers—demo requests jumped 4x in two weeks.",
+    "testimonial-author": "Sarah Chen, VP of Marketing at ScaleGrid",
+    "cta-headline": "Stop showing the same page to every Careerflow visitor.",
+    "cta-button": "Start Personalizing — Free",
+    "footer-tagline": "© 2026 DummyOps, Inc. Personalization at scale for SaaS."
+  },
+  "created_at": 1772563373.4931693
+}
