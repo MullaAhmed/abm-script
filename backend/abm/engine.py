@@ -9,7 +9,7 @@ from .models import (
     PersonalizationCache,
     VisitorInfo,
 )
-from .personalizer import research_and_personalize
+from .personalizer import init_ai_client, research_and_personalize
 
 
 def _visitor_from_payload(payload: dict) -> VisitorInfo | None:
@@ -47,15 +47,17 @@ class PersonalizationEngine:
         self.settings = settings
         self.model = settings.abm_ai_model
         self.identity = create_identity_provider(
-            settings.identity_provider,
-            settings.get_identity_api_key(),
+            settings.tomba_api_key,
+            settings.tomba_api_secret,
+            settings.apify_token,
         )
         self.cache = create_cache(
             settings.storage_type,
             settings.cache_ttl,
             settings.cache_dir,
         )
-        print(f"[Engine] Initialized with provider={settings.identity_provider}, model={settings.abm_ai_model}")
+        init_ai_client(settings.openai_api_key)
+        print(f"[Engine] Initialized with provider=apollo, model={settings.abm_ai_model}")
 
     async def identify_and_personalize(
         self,

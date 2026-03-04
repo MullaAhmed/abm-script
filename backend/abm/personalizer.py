@@ -1,14 +1,30 @@
 import json
 
-import litellm
+from openai import AsyncOpenAI
 
 from .models import PageElement, PersonalizedElement, VisitorInfo
+
+_client: AsyncOpenAI | None = None
+
+
+def init_ai_client(api_key: str) -> None:
+    global _client
+    if _client is None:
+        _client = AsyncOpenAI(api_key=api_key)
+
+
+def _get_client() -> AsyncOpenAI:
+    if _client is None:
+        raise RuntimeError("AI client not initialized — call init_ai_client() first")
+    return _client
 
 
 def _build_company_context(visitor: VisitorInfo) -> str:
     parts: list[str] = []
     if visitor.company:
         parts.append(f"Company: {visitor.company}")
+    if visitor.company_description:
+        parts.append(f"About: {visitor.company_description}")
     if visitor.industry:
         parts.append(f"Industry: {visitor.industry}")
     if visitor.company_size:
@@ -23,9 +39,9 @@ def _build_company_context(visitor: VisitorInfo) -> str:
 async def research_and_personalize(
     visitor: VisitorInfo,
     elements: list[PageElement],
-    model: str = "openai/gpt-5-nano",
+    model: str = "gpt-5-nano",
 ) -> list[PersonalizedElement]:
-    """Personalize page elements using visitor data from RB2B."""
+    """Personalize page elements using visitor data."""
 
     company_context = _build_company_context(visitor)
     print(f"[Personalizer] Company context:\n{company_context}")
@@ -36,11 +52,10 @@ async def research_and_personalize(
         for e in elements
     )
 
-    response = await litellm.acompletion(
+    response = await _get_client().responses.create(
         model=model,
-        messages=[{
-            "role": "user",
-            "content": f"""Rewrite these landing page elements for a visitor from this company. Sell DummyOps (AI landing page personalization) to their specific industry and company.
+        service_tier="priority",
+        input=f"""Rewrite these landing page elements for a visitor from this company. Sell DummyOps (AI landing page personalization) to their specific industry and company.
 
 COMPANY:
 {company_context}
@@ -57,10 +72,9 @@ ELEMENTS:
 
 Respond with ONLY JSON, no markdown fences:
 {{"elements": [{{"id": "...", "content": "..."}}]}}""",
-        }],
     )
 
-    raw = response.choices[0].message.content
+    raw = response.output_text
     print(f"[Personalizer] AI response: {raw[:200]}...")
     data = json.loads(raw)
     result = [PersonalizedElement(**e) for e in data["elements"]]

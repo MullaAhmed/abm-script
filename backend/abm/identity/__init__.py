@@ -1,21 +1,7 @@
-from .base import IdentityProvider
-from .clearbit import ClearbitProvider
-from .ipapi import IPAPIProvider
-from .pdl import PDLProvider
-from .rb2b import RB2BProvider
+from .tomba import TombaProvider
 
 
 def create_identity_provider(
-    provider: str, api_key: str
-) -> IdentityProvider:
-    match provider:
-        case "rb2b":
-            return RB2BProvider(api_key)
-        case "clearbit-reveal":
-            return ClearbitProvider(api_key)
-        case "ip-api":
-            return IPAPIProvider()
-        case "pdl":
-            return PDLProvider(api_key)
-        case _:
-            raise ValueError(f"Unknown identity provider: {provider}")
+    tomba_key: str, tomba_secret: str, apify_token: str,
+) -> TombaProvider:
+    return TombaProvider(tomba_key, tomba_secret, apify_token)

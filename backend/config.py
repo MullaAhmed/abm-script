@@ -17,14 +17,12 @@ class Settings(BaseSettings):
 
     # --- AI ---
     openai_api_key: str = ""
-    abm_ai_model: str = "openai/gpt-5-nano"
+    abm_ai_model: str = "gpt-4.1-nano"
 
-    # --- Identity ---
-    identity_provider: str = Field(default="rb2b", description="rb2b | pdl | clearbit-reveal | ip-api")
-    rb2b_account_key: str = ""
-    rb2b_integration_key: str = ""
-    clearbit_api_key: str = ""
-    pdl_api_key: str = ""
+    # --- Identity (Tomba + Apify company enricher) ---
+    tomba_api_key: str = ""
+    tomba_api_secret: str = ""
+    apify_token: str = ""
 
     # --- Storage / Cache ---
     storage_type: str = Field(default="memory", description="memory | file")
@@ -46,17 +44,6 @@ class Settings(BaseSettings):
         if self.cors_origins == "*":
             return ["*"]
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
-
-    def get_identity_api_key(self) -> str:
-        match self.identity_provider:
-            case "rb2b":
-                return self.rb2b_account_key
-            case "clearbit-reveal":
-                return self.clearbit_api_key
-            case "pdl":
-                return self.pdl_api_key
-            case _:
-                return ""
 
 
 @lru_cache

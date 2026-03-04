@@ -6,8 +6,6 @@
     _debug: false,
     _backendURL: null,
     _personalized: false,
-    _pollTimer: null,
-    _pollCount: 0,
 
     init: function (config) {
       this._config = config;
@@ -25,57 +23,11 @@
         this._personalized = true;
       }
 
-      // Inject RB2B script if account key is provided
-      if (config.rb2bAccountKey) {
-        this._injectRB2B(config.rb2bAccountKey);
-      }
-
       this._listenForForms();
-
-      // Auto-poll for webhook-based personalization
-      if (!this._personalized) {
-        var self = this;
-        setTimeout(function () {
-          self._startPolling();
-        }, 2000);
-      }
-    },
-
-    _injectRB2B: function (accountKey) {
-      var reb2b = (window.reb2b = window.reb2b || []);
-      if (reb2b.invoked) return;
-      reb2b.invoked = true;
-      reb2b.methods = ["identify", "collect"];
-      reb2b.factory = function (method) {
-        return function () {
-          var args = Array.prototype.slice.call(arguments);
-          args.unshift(method);
-          reb2b.push(args);
-          return reb2b;
-        };
-      };
-      for (var i = 0; i < reb2b.methods.length; i++) {
-        reb2b[reb2b.methods[i]] = reb2b.factory(reb2b.methods[i]);
-      }
-      reb2b.load = function (key) {
-        var s = document.createElement("script");
-        s.type = "text/javascript";
-        s.async = true;
-        s.src =
-          "https://s3-us-west-2.amazonaws.com/b2bjsstore/b/" +
-          key +
-          "/reb2b.js.gz";
-        var first = document.getElementsByTagName("script")[0];
-        first.parentNode.insertBefore(s, first);
-      };
-      reb2b.SNIPPET_VERSION = "1.0.1";
-      reb2b.load(accountKey);
-      this._log("RB2B script injected");
     },
 
     _listenForForms: function () {
       var self = this;
-      // Use event delegation on document so it works even if init runs after DOM is ready
       document.addEventListener("submit", function (evt) {
         var form = evt.target;
         if (!form || !form.hasAttribute("data-abm-trigger")) return;
@@ -89,26 +41,6 @@
         self._personalized = false;
         self._sendToBackend(payload);
       });
-    },
-
-    _startPolling: function () {
-      var self = this;
-      this._pollCount = 0;
-      var maxPolls = 10;
-      var interval = 3000;
-
-      this._log("Polling for RB2B webhook data...");
-
-      this._pollTimer = setInterval(function () {
-        self._pollCount++;
-        if (self._personalized || self._pollCount > maxPolls) {
-          self._log("Stopped polling (personalized=" + self._personalized + ", polls=" + self._pollCount + ")");
-          clearInterval(self._pollTimer);
-          self._pollTimer = null;
-          return;
-        }
-        self._sendToBackend({ page_url: window.location.href });
-      }, interval);
     },
 
     _collectElements: function () {
@@ -234,8 +166,6 @@
     for (var i = 0; i < scripts.length; i++) {
       var src = scripts[i].getAttribute("src") || "";
       if (src.indexOf("/api/snippet.js") !== -1) {
-        // Extract origin from the script src
-        // Handles both absolute (https://host/api/snippet.js) and relative (/api/snippet.js)
         if (src.indexOf("://") !== -1) {
           var parts = src.split("/api/snippet.js");
           backendURL = parts[0];
@@ -246,7 +176,7 @@
       }
     }
 
-    if (!backendURL) return; // Not loaded via /api/snippet.js, user must call initABM() manually
+    if (!backendURL) return;
 
     fetch(backendURL.replace(/\/+$/, "") + "/api/config")
       .then(function (res) { return res.json(); })
@@ -254,7 +184,6 @@
         console.log("[ABM] Auto-init with config from", backendURL);
         ABM.init({
           backendURL: backendURL,
-          rb2bAccountKey: cfg.rb2b_account_key || "",
           siteId: cfg.site_id || null,
           debug: cfg.debug || false,
           cacheTtl: (cfg.cache_ttl || 3600) * 1000,

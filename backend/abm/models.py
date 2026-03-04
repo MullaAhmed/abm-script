@@ -9,6 +9,7 @@ class VisitorInfo(BaseModel):
     name: str | None = None
     email: str | None = None
     company: str | None = None
+    company_description: str | None = None
     role: str | None = None
     industry: str | None = None
     company_size: str | None = None
