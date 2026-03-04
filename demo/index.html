@@ -565,7 +565,7 @@
   <nav class="nav">
     <div class="nav-brand">
       <div class="nav-logo">D</div>
-      <span dummy-ops-element="nav-company">DummyOps</span>
+      <span>DummyOps</span>
     </div>
     <div class="nav-links">
       <a href="#features">Features</a>
@@ -573,7 +573,7 @@
       <a href="#">Pricing</a>
       <a href="#">Integrations</a>
     </div>
-    <button class="nav-cta" dummy-ops-element="nav-cta">Start Free Trial</button>
+    <button>Start Free Trial</button>
   </nav>
 
   <!-- ── Hero ─────────────────────────────────────── -->
@@ -582,7 +582,7 @@
     <h1 dummy-ops-element="headline">Every visitor sees the landing page that converts them</h1>
     <p class="hero-subtext" dummy-ops-element="subtext">DummyOps personalizes your landing pages in real time using AI — tailored headlines, copy, and CTAs for every visitor based on who they are and where they come from.</p>
     <div class="hero-actions">
-      <button class="btn-primary" dummy-ops-element="cta">Start Free Trial</button>
+      <button class="btn-primary">Start Free Trial</button>
       <button class="btn-secondary">Watch Demo</button>
     </div>
     <p class="hero-proof" dummy-ops-element="proof">Trusted by 2,000+ marketing teams — 3.2x average lift in conversions</p>
@@ -641,7 +641,7 @@
 
   <!-- ── Footer ───────────────────────────────────── -->
   <footer class="footer">
-    <p dummy-ops-element="footer-tagline">&copy; 2026 DummyOps, Inc. Personalized pages, higher conversions.</p>
+    <p>&copy; 2026 DummyOps, Inc. Personalized pages, higher conversions.</p>
   </footer>
 
   <!-- ── Status Badge ─────────────────────────────── -->
@@ -735,8 +735,7 @@
   <!-- ── Demo UX Logic ────────────────────────────── -->
   <script>
     (function () {
-      // Init ABM client
-      initABM({ backendURL: window.location.origin, debug: true });
+      // ABM auto-initializes from /api/config — no manual initABM() needed
 
       // ── DOM refs ──
       var fab            = document.getElementById("fab-trigger");
@@ -778,7 +777,7 @@
       var errorTimeout = null;
 
       btnPersonalize.addEventListener("click", function () {
-        // Submit the form (triggers abm.js data-abm-trigger handler)
+        // Submit the form (triggers abm.js data-abm-trigger handler via delegation)
         var evt = new Event("submit", { bubbles: true, cancelable: true });
         form.dispatchEvent(evt);
 

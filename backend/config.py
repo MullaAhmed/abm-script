@@ -18,11 +18,11 @@ class Settings(BaseSettings):
     # --- AI ---
     openai_api_key: str = ""
     abm_ai_model: str = "openai/gpt-5-nano"
-    brave_api_key: str = ""
 
     # --- Identity ---
-    identity_provider: str = Field(default="pdl", description="pdl | rb2b | clearbit-reveal | ip-api")
-    rb2b_api_key: str = ""
+    identity_provider: str = Field(default="rb2b", description="rb2b | pdl | clearbit-reveal | ip-api")
+    rb2b_account_key: str = ""
+    rb2b_integration_key: str = ""
     clearbit_api_key: str = ""
     pdl_api_key: str = ""
 
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     def get_identity_api_key(self) -> str:
         match self.identity_provider:
             case "rb2b":
-                return self.rb2b_api_key
+                return self.rb2b_account_key
             case "clearbit-reveal":
                 return self.clearbit_api_key
             case "pdl":

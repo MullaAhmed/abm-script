@@ -1,31 +1,8 @@
 import json
 
-import httpx
 import litellm
 
 from .models import PageElement, PersonalizedElement, VisitorInfo
-
-_brave_client = httpx.AsyncClient()
-
-
-async def _brave_search(query: str, api_key: str, count: int = 3) -> str:
-    """Hit Brave Search API and return a compact summary of top results."""
-    resp = await _brave_client.get(
-        "https://api.search.brave.com/res/v1/web/search",
-        params={"q": query, "count": count},
-        headers={"X-Subscription-Token": api_key, "Accept": "application/json"},
-        timeout=5.0,
-    )
-    if resp.status_code != 200:
-        return ""
-
-    results = resp.json().get("web", {}).get("results", [])
-    snippets: list[str] = []
-    for r in results:
-        title = r.get("title", "")
-        desc = r.get("description", "")
-        snippets.append(f"- {title}: {desc}")
-    return "\n".join(snippets)
 
 
 def _build_company_context(visitor: VisitorInfo) -> str:
@@ -47,23 +24,12 @@ async def research_and_personalize(
     visitor: VisitorInfo,
     elements: list[PageElement],
     model: str = "openai/gpt-5-nano",
-    brave_api_key: str = "",
 ) -> list[PersonalizedElement]:
-    """Search for the visitor's company via Brave, then personalize page elements."""
+    """Personalize page elements using visitor data from RB2B."""
 
     company_context = _build_company_context(visitor)
-
-    # Brave search for company intel
-    research = ""
-    if brave_api_key and visitor.company:
-        query = f"{visitor.company} company"
-        if visitor.industry:
-            query += f" {visitor.industry}"
-        research = await _brave_search(query, brave_api_key)
-
-    research_block = ""
-    if research:
-        research_block = f"\nCOMPANY RESEARCH:\n{research}\n"
+    print(f"[Personalizer] Company context:\n{company_context}")
+    print(f"[Personalizer] Personalizing {len(elements)} elements with model={model}")
 
     elements_spec = "\n".join(
         f'- id="{e.id}" tag=<{e.tag}> current: "{e.current_text}"'
@@ -78,7 +44,7 @@ async def research_and_personalize(
 
 COMPANY:
 {company_context}
-{research_block}
+
 RULES:
 - Use the company name naturally in headlines and copy
 - Focus on their industry's pain points and how DummyOps solves them
@@ -95,5 +61,8 @@ Respond with ONLY JSON, no markdown fences:
     )
 
     raw = response.choices[0].message.content
+    print(f"[Personalizer] AI response: {raw[:200]}...")
     data = json.loads(raw)
-    return [PersonalizedElement(**e) for e in data["elements"]]
+    result = [PersonalizedElement(**e) for e in data["elements"]]
+    print(f"[Personalizer] Generated {len(result)} personalized elements")
+    return result
