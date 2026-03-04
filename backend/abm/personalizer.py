@@ -1,6 +1,8 @@
-import json
+import asyncio
 
 from openai import AsyncOpenAI
+
+from .timing import timed
 
 from .models import PageElement, PersonalizedElement, VisitorInfo
 
@@ -36,47 +38,58 @@ def _build_company_context(visitor: VisitorInfo) -> str:
     return "\n".join(parts) if parts else "Unknown company"
 
 
-async def research_and_personalize(
-    visitor: VisitorInfo,
-    elements: list[PageElement],
-    model: str = "gpt-5-nano",
-) -> list[PersonalizedElement]:
-    """Personalize page elements using visitor data."""
-
-    company_context = _build_company_context(visitor)
-    print(f"[Personalizer] Company context:\n{company_context}")
-    print(f"[Personalizer] Personalizing {len(elements)} elements with model={model}")
-
-    elements_spec = "\n".join(
-        f'- id="{e.id}" tag=<{e.tag}> current: "{e.current_text}"'
-        for e in elements
-    )
-
-    response = await _get_client().responses.create(
+@timed
+async def _personalize_element(
+    element: PageElement,
+    company_context: str,
+    model: str,
+) -> PersonalizedElement:
+    response = await _get_client().chat.completions.create(
         model=model,
-        service_tier="priority",
-        input=f"""Rewrite these landing page elements for a visitor from this company. Sell DummyOps (AI landing page personalization) to their specific industry and company.
+        messages=[{
+            "role": "user",
+            "content": f"""Rewrite this landing page element for a visitor from this company. Sell DummyOps (AI landing page personalization) to their specific industry and company.
 
 COMPANY:
 {company_context}
 
 RULES:
-- Use the company name naturally in headlines and copy
+- Use the company name naturally
 - Focus on their industry's pain points and how DummyOps solves them
-- Keep each element's purpose and approximate length
+- Keep the element's purpose and approximate length
 - Sound confident, not salesy. Write like a top SaaS marketer.
-- For trust/proof: reference relevant industry metrics or companies
+- For trust/proof elements: reference relevant industry metrics
 
-ELEMENTS:
-{elements_spec}
+ELEMENT:
+id="{element.id}" tag=<{element.tag}> current: "{element.current_text}"
 
-Respond with ONLY JSON, no markdown fences:
-{{"elements": [{{"id": "...", "content": "..."}}]}}""",
+Respond with ONLY the rewritten plain text. No HTML tags, no markdown, no JSON, no quotes, no explanation.""",
+        }],
     )
 
-    raw = response.output_text
-    print(f"[Personalizer] AI response: {raw[:200]}...")
-    data = json.loads(raw)
-    result = [PersonalizedElement(**e) for e in data["elements"]]
-    print(f"[Personalizer] Generated {len(result)} personalized elements")
-    return result
+    content = response.choices[0].message.content.strip().strip('"')
+    return PersonalizedElement(id=element.id, content=content)
+
+
+@timed
+async def research_and_personalize(
+    visitor: VisitorInfo,
+    elements: list[PageElement],
+    model: str = "gpt-5-nano",
+) -> list[PersonalizedElement]:
+    company_context = _build_company_context(visitor)
+
+    tasks = [
+        _personalize_element(el, company_context, model)
+        for el in elements
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    personalized = []
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            personalized.append(PersonalizedElement(id=elements[i].id, content=elements[i].current_text))
+        else:
+            personalized.append(result)
+
+    return personalized

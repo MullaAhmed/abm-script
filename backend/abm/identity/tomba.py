@@ -1,4 +1,8 @@
+import asyncio
+
 import httpx
+
+from ..timing import timed
 
 from ..models import VisitorInfo
 
@@ -18,45 +22,41 @@ class TombaProvider:
         self._apify_token = apify_token
         self._apify = httpx.AsyncClient(timeout=60.0)
 
+    @timed
     async def identify(self, payload: dict) -> VisitorInfo | None:
         email = payload.get("email") or payload.get("Business Email")
         if not email:
             return None
 
-        # Step 1: Tomba — email → person data + company domain
-        print(f"[Tomba] Enriching {email}")
-        resp = await self._tomba.get(_TOMBA_ENRICH_URL, params={"email": email})
+        domain = email.split("@")[1] if "@" in email else None
 
-        if resp.status_code != 200:
-            print(f"[Tomba] Failed: {resp.status_code} {resp.text[:200]}")
+        tomba_task = self._enrich_person(email)
+        company_task = self._enrich_company(domain) if domain and self._apify_token else asyncio.sleep(0)
+
+        tomba_result, company_result = await asyncio.gather(
+            tomba_task, company_task, return_exceptions=True,
+        )
+
+        if isinstance(tomba_result, Exception) or tomba_result is None:
             return None
 
-        data = resp.json().get("data", {})
-
+        data = tomba_result
         name = data.get("full_name")
         role = data.get("position")
         linkedin = data.get("linkedin")
         company_name = data.get("company")
-        website_url = data.get("website_url")
         country = data.get("country")
 
         if not company_name and not name:
-            print(f"[Tomba] No useful data for {email}")
             return None
 
-        print(f"[Tomba] Found: {name}, {role} @ {company_name} ({website_url})")
-
-        # Step 2: Apify company enricher — domain → description, industry, etc.
         company_desc = None
         industry = None
-        if website_url and self._apify_token:
-            company_data = await self._enrich_company(website_url)
-            if company_data:
-                company_desc = company_data.get("description")
-                industry = company_data.get("industry")
-                # Use enriched company name if Tomba didn't have one
-                if not company_name:
-                    company_name = company_data.get("companyName")
+        if isinstance(company_result, dict):
+            company_desc = company_result.get("description")
+            industry = company_result.get("industry")
+            if not company_name:
+                company_name = company_result.get("companyName")
 
         return VisitorInfo(
             name=name,
@@ -69,9 +69,15 @@ class TombaProvider:
             location=country,
         )
 
+    @timed
+    async def _enrich_person(self, email: str) -> dict | None:
+        resp = await self._tomba.get(_TOMBA_ENRICH_URL, params={"email": email})
+        if resp.status_code != 200:
+            return None
+        return resp.json().get("data", {})
+
+    @timed
     async def _enrich_company(self, domain: str) -> dict | None:
-        """Call Apify website-company-enricher for company details."""
-        print(f"[Apify] Enriching company: {domain}")
         try:
             resp = await self._apify.post(
                 _APIFY_COMPANY_URL,
@@ -80,14 +86,11 @@ class TombaProvider:
                 json={"domains": [domain]},
             )
             if resp.status_code not in (200, 201):
-                print(f"[Apify] Failed: {resp.status_code} {resp.text[:200]}")
                 return None
 
             results = resp.json()
             if results and isinstance(results, list) and len(results) > 0:
-                data = results[0]
-                print(f"[Apify] Company: {data.get('companyName')} — {data.get('description', '')[:80]}")
-                return data
-        except Exception as e:
-            print(f"[Apify] Error: {e}")
+                return results[0]
+        except Exception:
+            pass
         return None
